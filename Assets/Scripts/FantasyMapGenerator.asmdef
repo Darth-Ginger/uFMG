@@ -1,9 +1,7 @@
 {
-    "name": "Maps",
+    "name": "FantasyMapGenerator",
     "rootNamespace": "",
-    "references": [
-        "GUID:d47f26279dbdc04408b742e2156f8b81"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

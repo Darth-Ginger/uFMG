@@ -1,3 +1,16 @@
 {
-	"name": "World"
+    "name": "World",
+    "rootNamespace": "FantasyMapGenerator",
+    "references": [
+        "GUID:d47f26279dbdc04408b742e2156f8b81"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
