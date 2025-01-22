@@ -1,7 +1,11 @@
 # Unity generated
-Temp/
-Library/
+[Ll]ibrary/
+[Tt]emp/
+[Bb]uild/
+[Bb]uilds/
 Logs/
+UserSettings/
+
 # User specific
 UserSettings/
 *.suo
