@@ -23,6 +23,8 @@ Packages/
 
 # Visual Studio files
 .vscode/
+*.csproj
+*.meta
 
 # git files
 .git/
