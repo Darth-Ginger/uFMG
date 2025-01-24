@@ -9,7 +9,7 @@ namespace FantasyMapGenerator.Interfaces
         Vector2Int Size { get; } // e.g., width and height in grid units
         int Seed { get; }        // e.g., 123
         string Type { get; }     // e.g., "HeightMap", "Voronoi"
-        void Generate(Vector2Int size, int seed);
+        void Generate();
         void Clear();
     }
 

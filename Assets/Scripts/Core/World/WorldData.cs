@@ -46,7 +46,15 @@ namespace FantasyMapGenerator.Core.World
         }
 
         // Retrieve a map
-        public IMap GetMap(string mapName) => maps.TryGetValue(mapName, out var map) ? map : null;
+        public IMap GetMap(string mapName) 
+        {
+            if (!maps.TryGetValue(mapName, out var map))
+            {
+                Debug.LogWarning($"Map with name {mapName} not found.");
+                return null;
+            }
+            return map;
+        }
 
         // Serialization Methods
         public string SerializeToJson() => JsonUtility.ToJson(this);
