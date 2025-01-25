@@ -19,6 +19,8 @@ namespace FantasyMapGenerator.Core.Maps.Voronoi
         public int Seed { get; private set; }
         public string Type => "Voronoi";
 
+        public List<VoronoiCell> GetCells() => _cells;
+
 
         public VoronoiMap(Vector2Int size, int seed, int pointCount = 100)
         {

@@ -16,6 +16,9 @@ namespace FantasyMapGenerator.Core.Maps.Voronoi
                 cells[point] = new VoronoiCell(point);
             }
 
+            // Store edges to track shared ones
+            Dictionary<Edge, List<VoronoiCell>> edgeToCells = new();
+
             // Iterate through each Delaunay triangle to compute circumcenters
             foreach (var triangle in delaunayTriangles)
             {
@@ -31,12 +34,43 @@ namespace FantasyMapGenerator.Core.Maps.Voronoi
                         cells[vertex].Vertices.Add(circumcenter);
                     }
                 }
+                // Add triangle edges to edgeToCells
+                var edges = triangle.GetEdges();
+                foreach (var edge in edges)
+                {
+                    if (!edgeToCells.ContainsKey(edge))
+                    {
+                        edgeToCells[edge] = new List<VoronoiCell>();
+                    }
+
+                    foreach (var vertex in triangle.Vertices)
+                    {
+                        if (cells.TryGetValue(vertex, out VoronoiCell cell))
+                        {
+                            if (!edgeToCells[edge].Contains(cell))
+                            {
+                                edgeToCells[edge].Add(cell);
+                            }
+                        }
+                    }
+                }
             }
 
             // Connect circumcenters to form edges (optional visualization)
             foreach (var cell in cells.Values)
             {
                 OrderVertices(cell); // Order the vertices in a clockwise manner
+            }
+
+            // Establish adjacency relationships
+            foreach (var pair in edgeToCells)
+            {
+                var adjacentCells = pair.Value;
+                if (adjacentCells.Count == 2)
+                {
+                    adjacentCells[0].AddNeighbor(adjacentCells[1]);
+                    adjacentCells[1].AddNeighbor(adjacentCells[0]);
+                }
             }
 
             // Return the Voronoi cells
