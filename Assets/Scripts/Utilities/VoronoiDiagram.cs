@@ -11,12 +11,15 @@ namespace FantasyMapGenerator.Utilities
         [SerializeField] private List<VoronoiEdge> _edges = new List<VoronoiEdge>();
         [SerializeField] private List<VoronoiCell> _cells = new List<VoronoiCell>();
         [SerializeField] private Rect _bounds = new Rect(0, 0, 1000, 1000);
+        private bool initialized = false;
 
         // Publicproperties   
         public List<Vector2> Sites { get => _sites; }
         public List<VoronoiEdge> Edges { get => _edges; }
         public List<VoronoiCell> Cells { get => _cells; }
         public Rect Bounds { get => _bounds; set => _bounds = value; }
+
+        public bool Initialized { get => initialized; }
 
         // Lazy lookup cache for sites to cells
         private Dictionary<Vector2, VoronoiCell> _siteToCell = new Dictionary<Vector2, VoronoiCell>();
@@ -51,9 +54,11 @@ namespace FantasyMapGenerator.Utilities
         public VoronoiDiagram(float width, float height, int siteCount)
         {
             // Set up the bounds (here we assume the origin is at (0,0)).
-            bounds = new Rect(0, 0, width, height);
+            _bounds = new Rect(0, 0, width, height);
             // Generate the sites within the bounds.
             TriangleNetAdapter.GenerateDiagram(this, siteCount);
+
+            initialized = true;
         }
 
 
@@ -65,6 +70,8 @@ namespace FantasyMapGenerator.Utilities
             _sites.Clear();
             _edges.Clear();
             _cells.Clear();
+
+            initialized = false;
         }
     }
     [System.Serializable]

@@ -33,7 +33,7 @@ namespace FantasyMapGenerator.Core.World
         public void GenerateVoronoi(int seed, Rect bounds)
         {
             // Use VoronoiLib or your custom generator
-            _voronoiDiagram = TriangleNetAdapter.Generate(seed, bounds, 1000); // 1000 cells
+            _voronoiDiagram = new VoronoiDiagram(bounds.width, bounds.height, seed);
         }
 
         public void AddLayer(LayerBase layer)

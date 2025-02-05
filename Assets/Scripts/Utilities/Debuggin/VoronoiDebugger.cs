@@ -1,11 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
-using TriangleNet.Geometry;  // From Triangle.NET
-using TriangleNet.Meshing;   // From Triangle.NET
-using FantasyMapGenerator.Utilities;
+using NaughtyAttributes;
+
+
 
 namespace FantasyMapGenerator.Utilities.Debugging
 {
+
     public class VoronoiDebugger : MonoBehaviour
     {
         [Header("Input Settings")]
@@ -22,34 +23,64 @@ namespace FantasyMapGenerator.Utilities.Debugging
         public bool drawColoredCells = true;
         public Color edgeColor = Color.black;
         public Color centroidColor = Color.red;
+        public GameObject diagramHost = null;
+
+        public VoronoiDiagram diagram = null;
 
         // Button for generating diagram in the inspector.
-        [Button("Generate Voronoi Diagram")]
+        [Button("Generate Diagram")]
         public void GenerateDiagram() => diagram = new VoronoiDiagram(width, height, siteCount);
         
-        public VoronoiDiagram diagram;
 
         private void Start() 
         {
+            if (diagramHost == null) diagramHost = gameObject;
+
             // Optionally generate the diagram if we have a list of sites.
-            if (generateDiagramOnStart && siteCount > 0) 
+            if (generateDiagramOnStart && siteCount > 0) GenerateDiagram();
+
+            // Optionally create the diagram on a plane.
+            if (drawColoredCells)
             {
-                diagram = new VoronoiDiagram(width, height, siteCount);
+                foreach (Transform child in diagramHost.transform)
+                {
+                    Destroy(child.gameObject);
+                }
+
+                CreateDiagramOnPlane();
             }
+        }
+
+        private bool CreateOnPlane() => diagram != null && diagram.Initialized;
+        [ShowIf("CreateOnPlane")]
+        [Button("Create Diagram On Plane")]
+        private void CreateDiagramOnPlane()
+        {
+            if (diagram == null | !diagram.Initialized) return;
+            if (diagramHost == null) diagramHost = gameObject;
+
+            VoronoiDebugVisualizer.ApplyColoredDiagramToPlane(diagram, diagramHost);
+
+        }
+
+        private bool CanClearDiagram() => diagram != null && diagram.Initialized;
+        [EnableIf("CanClearDiagram")]
+        [Button("Clear Diagram")]
+        private void ClearDiagram() 
+        {
+            if (diagram == null | !diagram.Initialized) return;
+            diagram.ClearDiagram();
         }
 
         private void OnDrawGizmos()
         {
-            if (diagram == null) return;
+            if (diagram == null | !diagram.Initialized) return;
 
             if (drawEdgesAndCentroids)
             {
-                VoronoiDebugVisualizer.DrawDiagramGizmos(diagram, edgeColor, centroidColor);
+                VoronoiDebugVisualizer.DrawDiagramGizmos(edgeColor, centroidColor, diagram);
             }
-            if (drawColoredCells)
-            {
-                VoronoiDebugVisualizer.DrawColoredDiagramOnPlane(diagram);
-            }
+
         }
     }
 
@@ -59,9 +90,9 @@ namespace FantasyMapGenerator.Utilities.Debugging
         /// <summary>
         /// Draws the diagram edges and centroids using Gizmos.
         /// </summary>
-        public static void DrawDiagramGizmos(VoronoiDiagram diagram, Color edgeColor, Color centroidColor)
+        public static void DrawDiagramGizmos(Color edgeColor, Color centroidColor, VoronoiDiagram diagram = null)
         {
-            if (diagram == null) return;
+            if (diagram == null | !diagram.Initialized) return;
             // Draw edges.
             Gizmos.color = edgeColor;
             foreach (var edge in diagram.Edges)
@@ -77,32 +108,64 @@ namespace FantasyMapGenerator.Utilities.Debugging
         }
 
         /// <summary>
-        /// Draws filled cell polygons on a plane, assigning each cell a color that is (ideally)
-        /// unique relative to its neighbors.
-        /// </summary>
-        public static void DrawColoredDiagramOnPlane(VoronoiDiagram diagram)
-        {
-            if (diagram == null) return;
+    /// For each cell in the diagram that has a valid polygon, create (or update) a child GameObject
+    /// under the specified host to display the cell with a unique color.
+    /// </summary>
+    public static void ApplyColoredDiagramToPlane(VoronoiDiagram diagram, GameObject host) {
+        if (diagram == null || host == null) return;
+        
+        // Get a mapping from cell index to color using our utility.
+        Dictionary<int, Color> cellColors = VoronoiUtilities.ColorCells(diagram);
 
-            // Obtain a mapping from cell indices to colors.
-            Dictionary<int, Color> cellColors = VoronoiUtilities.ColorCells(diagram);
-
-            // Draw each cell as a filled polygon.
-            for (int i = 0; i < diagram.Cells.Count; i++)
-            {
-                VoronoiCell cell = diagram.Cells[i];
-                // Ensure the cell has a valid polygon.
-                if (cell.Vertices == null || cell.Vertices.Count < 3)
-                    continue;
-
-                Mesh cellMesh = VoronoiUtilities.CreateCellMesh(cell.Vertices);
-                Gizmos.color = cellColors[i];
-                // Draw the mesh at identity. If your diagram should be transformed,
-                // you can adjust the matrix via Gizmos.matrix.
-                Gizmos.DrawMesh(cellMesh, Vector3.zero);
-                // Optionally, draw the cell centroid.
-                Gizmos.DrawSphere(cell.Centroid, 0.1f);
-            }
+        // Look for (or create) a container child to hold the cell objects.
+        Transform container = host.transform.Find("ColoredCellsContainer");
+        if (container == null) {
+            GameObject containerGO = new GameObject("ColoredCellsContainer");
+            containerGO.transform.parent = host.transform;
+            containerGO.transform.localPosition = Vector3.zero;
+            container = containerGO.transform;
         }
+        
+        Debug.Log($"Applying colored diagram to plane with {diagram.Cells.Count} cells.");
+        // For each cell, create or update a child object.
+        for (int i = 0; i < diagram.Cells.Count; i++) {
+            VoronoiCell cell = diagram.Cells[i];
+            // Only proceed if the cell has a valid polygon.
+            if (cell.Vertices == null || cell.Vertices.Count < 3)
+            {
+                Debug.LogWarning($"Cell {i} has no valid polygon.");
+                continue;
+            }
+            
+            string cellName = "Cell_" + i;
+            Transform cellTransform = container.Find(cellName);
+            GameObject cellGO;
+            if (cellTransform == null) {
+                cellGO = new GameObject(cellName);
+                cellGO.transform.parent = container;
+                cellGO.transform.localPosition = Vector3.zero;
+            } else {
+                cellGO = cellTransform.gameObject;
+            }
+            
+            // Ensure the cell object has a MeshFilter and MeshRenderer.
+            MeshFilter mf = cellGO.GetComponent<MeshFilter>();
+            if (mf == null)
+                mf = cellGO.AddComponent<MeshFilter>();
+            MeshRenderer mr = cellGO.GetComponent<MeshRenderer>();
+            if (mr == null)
+                mr = cellGO.AddComponent<MeshRenderer>();
+
+            // Create (or update) the mesh for the cell polygon.
+            Mesh cellMesh = VoronoiUtilities.CreateCellMesh(cell.Vertices);
+            mf.mesh = cellMesh;
+            
+            // Create a material with the assigned color.
+            // Here we use an unlit color shader.
+            Material cellMat = new Material(Shader.Find("Unlit/Color"));
+            cellMat.color = cellColors.ContainsKey(i) ? cellColors[i] : Color.white;
+            mr.material = cellMat;
+        }
+    }
     }
 }

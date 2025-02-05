@@ -44,7 +44,7 @@ namespace FantasyMapGenerator.Utilities
             Polygon polygon = new Polygon();
             foreach (Vector2 site in generatedSites)
             {
-                polygon.Add(new TriangleNet.Geometry.Vertex(site.x, site.y));
+                polygon.Add(new Vertex(site.x, site.y));
             }
 
             // Optionally, you could add constraints or boundary segments here based on bounds.
@@ -76,6 +76,10 @@ namespace FantasyMapGenerator.Utilities
                 Vector2 v1 = GetVertexPosition(tri.GetVertex(1));
                 Vector2 v2 = GetVertexPosition(tri.GetVertex(2));
                 cell.Centroid = (v0 + v1 + v2) / 3f;
+                
+                cell.Vertices.Add(v0);
+                cell.Vertices.Add(v1);
+                cell.Vertices.Add(v2);
 
                 int cellIndex = diagram.Cells.Count;
                 diagram.Cells.Add(cell);
