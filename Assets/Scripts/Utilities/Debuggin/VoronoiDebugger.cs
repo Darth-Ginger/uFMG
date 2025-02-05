@@ -1,12 +1,21 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TriangleNet.Geometry;  // From Triangle.NET
+using TriangleNet.Meshing;   // From Triangle.NET
 using FantasyMapGenerator.Utilities;
 
 namespace FantasyMapGenerator.Utilities.Debugging
 {
     public class VoronoiDebugger : MonoBehaviour
     {
-        public VoronoiDiagram diagram;
+        [Header("Input Settings")]
+        [Tooltip("If true, the diagram will be generated at startup.")]
+        public bool generateDiagramOnStart = true;
+        [Tooltip("Bounds for the diagram generation (for clipping infinite edges).")]
+        public float width = 1000;
+        public float height = 1000;
+        [Tooltip("Number of sites to generate.")]
+        public int siteCount = 10;
 
         // Toggle these in the Inspector to show different visualizations.
         public bool drawEdgesAndCentroids = true;
@@ -14,6 +23,20 @@ namespace FantasyMapGenerator.Utilities.Debugging
         public Color edgeColor = Color.black;
         public Color centroidColor = Color.red;
 
+        // Button for generating diagram in the inspector.
+        [Button("Generate Voronoi Diagram")]
+        public void GenerateDiagram() => diagram = new VoronoiDiagram(width, height, siteCount);
+        
+        public VoronoiDiagram diagram;
+
+        private void Start() 
+        {
+            // Optionally generate the diagram if we have a list of sites.
+            if (generateDiagramOnStart && siteCount > 0) 
+            {
+                diagram = new VoronoiDiagram(width, height, siteCount);
+            }
+        }
 
         private void OnDrawGizmos()
         {

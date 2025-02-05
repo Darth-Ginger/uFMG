@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using FantasyMapGenerator.Interfaces;
+using FantasyMapGenerator.Utilities;
 
 
 namespace FantasyMapGenerator.Core.World
@@ -12,7 +13,7 @@ namespace FantasyMapGenerator.Core.World
         public VoronoiDiagram Voronoi => _voronoiDiagram;
 
         // Layers (e.g., Heightmap, Tectonics)
-        [SerializeField] private List<ILayer> _layers = new List<ILayer>();
+        [SerializeField] private List<LayerBase> _layers = new List<LayerBase>();
 
         // Diagram properties for easy access
         public IReadOnlyList<Vector2> Sites => _voronoiDiagram.Sites;
@@ -32,10 +33,10 @@ namespace FantasyMapGenerator.Core.World
         public void GenerateVoronoi(int seed, Rect bounds)
         {
             // Use VoronoiLib or your custom generator
-            _voronoiDiagram = VoronoiAdapter.Generate(seed, bounds, 1000); // 1000 cells
+            _voronoiDiagram = TriangleNetAdapter.Generate(seed, bounds, 1000); // 1000 cells
         }
 
-        public void AddLayer(ILayer layer)
+        public void AddLayer(LayerBase layer)
         {
             _layers.Add(layer);
             layer.Initialize(this); // Pass World reference to layer
@@ -49,7 +50,7 @@ namespace FantasyMapGenerator.Core.World
                 _layers.Remove(layer);
             }
         }
-        public void RemoveLayer(ILayer layer)
+        public void RemoveLayer(LayerBase layer)
         {
             if (_layers.Contains(layer))
             {
@@ -57,12 +58,12 @@ namespace FantasyMapGenerator.Core.World
             }
         }
 
-        public ILayer GetLayer(string layerName)
+        public LayerBase GetLayer(string layerName)
         {
             return _layers.Find(l => l.Name == layerName);
         }
 
-        public List<ILayer> GetLayers() => _layers;
+        public List<LayerBase> GetLayers() => _layers;
 
     }
 }
