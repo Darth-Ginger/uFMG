@@ -10,4 +10,6 @@ namespace FantasyMapGenerator.Interfaces
         string GetWorldName();
         Dictionary<string, IMap> GetMaps();
     }
+
+    
 }

@@ -93,7 +93,11 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
+<<<<<<< HEAD
   m_LightingDataAsset: {fileID: 112000004, guid: 1af7848c41ed4e04dbd69f492e1396ea, type: 2}
+=======
+  m_LightingDataAsset: {fileID: 112000004, guid: 1d3206e60211ff54caee6413c02e88e2, type: 2}
+>>>>>>> main
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -322,8 +326,13 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
+<<<<<<< HEAD
   orthographic: 1
   orthographic size: 5
+=======
+  orthographic: 0
+  orthographic size: 19.94
+>>>>>>> main
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -347,13 +356,22 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
+<<<<<<< HEAD
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 3.05, z: -0.02}
+=======
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 473, y: 509, z: 941}
+>>>>>>> main
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+<<<<<<< HEAD
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+=======
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+>>>>>>> main
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -568,7 +586,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+<<<<<<< HEAD
 --- !u!1 &1437271335
+=======
+--- !u!1 &1407419146
+>>>>>>> main
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -576,6 +598,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+<<<<<<< HEAD
   - component: {fileID: 1437271340}
   - component: {fileID: 1437271339}
   - component: {fileID: 1437271338}
@@ -583,17 +606,28 @@ GameObject:
   - component: {fileID: 1437271336}
   m_Layer: 0
   m_Name: Plane
+=======
+  - component: {fileID: 1407419148}
+  - component: {fileID: 1407419147}
+  m_Layer: 0
+  m_Name: GameObject
+>>>>>>> main
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+<<<<<<< HEAD
 --- !u!114 &1437271336
+=======
+--- !u!114 &1407419147
+>>>>>>> main
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
   m_GameObject: {fileID: 1437271335}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -679,15 +713,50 @@ MeshFilter:
   m_GameObject: {fileID: 1437271335}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &1437271340
+=======
+  m_GameObject: {fileID: 1407419146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 897441f1440167143b7acad7d7b00bfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  generateDiagramOnStart: 1
+  width: 1000
+  height: 1000
+  siteCount: 1000
+  drawEdgesAndCentroids: 1
+  drawColoredCells: 1
+  edgeColor: {r: 0, g: 0, b: 0, a: 1}
+  centroidColor: {r: 1, g: 0, b: 0, a: 1}
+  diagramHost: {fileID: 1407419146}
+  diagram:
+    _sites: []
+    _edges: []
+    _cells: []
+    _bounds:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1000
+      height: 1000
+--- !u!4 &1407419148
+>>>>>>> main
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
   m_GameObject: {fileID: 1437271335}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+=======
+  m_GameObject: {fileID: 1407419146}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.642784, y: 6.972374, z: 2.967701}
+>>>>>>> main
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -700,4 +769,8 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
+<<<<<<< HEAD
   - {fileID: 1437271340}
+=======
+  - {fileID: 1407419148}
+>>>>>>> main
