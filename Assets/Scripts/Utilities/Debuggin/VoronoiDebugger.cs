@@ -70,6 +70,16 @@ namespace FantasyMapGenerator.Utilities.Debugging
         {
             if (diagram == null | !diagram.Initialized) return;
             diagram.ClearDiagram();
+            ClearColoredCells();
+        }
+
+        private bool GOContainerExists() => diagramHost != null && diagramHost.transform.Find("ColoredCellsContainer") != null;
+        [EnableIf("GOContainerExists")]
+        [Button("Clear Colored Cells")]
+        private void ClearColoredCells() 
+        {
+            if (diagramHost == null | !GOContainerExists()) return;
+            DestroyImmediate(diagramHost.transform.Find("ColoredCellsContainer").gameObject);
         }
 
         private void OnDrawGizmos()
@@ -136,7 +146,7 @@ namespace FantasyMapGenerator.Utilities.Debugging
                 Debug.LogWarning($"Cell {i} has no valid polygon.");
                 continue;
             }
-            
+
             string cellName = "Cell_" + i;
             Transform cellTransform = container.Find(cellName);
             GameObject cellGO;
@@ -157,7 +167,7 @@ namespace FantasyMapGenerator.Utilities.Debugging
                 mr = cellGO.AddComponent<MeshRenderer>();
 
             // Create (or update) the mesh for the cell polygon.
-            Mesh cellMesh = VoronoiUtilities.CreateCellMesh(cell.Vertices);
+            Mesh cellMesh = VoronoiUtilities.CreateCellMesh(cell);
             mf.mesh = cellMesh;
             
             // Create a material with the assigned color.

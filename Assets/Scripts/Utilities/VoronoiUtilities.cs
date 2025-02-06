@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FantasyMapGenerator.Utilities
 {
@@ -99,31 +100,40 @@ namespace FantasyMapGenerator.Utilities
         /// <summary>
         /// Creates a simple mesh for a convex polygon defined by the given vertices.
         /// </summary>
-        public static Mesh CreateCellMesh(List<Vector2> polygon)
+        public static Mesh CreateCellMesh(VoronoiCell cell)
         {
             Mesh mesh = new Mesh();
-            if (polygon == null || polygon.Count < 3)
+            if (cell == null || cell.Vertices == null || cell.Vertices.Count < 3)
                 return mesh;
 
-            Vector3[] vertices = new Vector3[polygon.Count];
-            for (int i = 0; i < polygon.Count; i++)
+            Vector2 centroid = cell.Centroid;
+
+            List<Vector2> sortedVertices = cell.Vertices
+                .OrderBy(v => Mathf.Atan2(v.y - centroid.y, v.x - centroid.x))
+                .ToList();
+
+            // Convert the sorted 2D vertices into 3D vertices (placed on the XY plane, Z = 0).
+            Vector3[] vertices3D = new Vector3[sortedVertices.Count];
+            for (int i = 0; i < sortedVertices.Count; i++)
             {
-                // Place vertices on the XY plane (Z = 0)
-                vertices[i] = new Vector3(polygon[i].x, polygon[i].y, 0);
+                vertices3D[i] = new Vector3(sortedVertices[i].x, sortedVertices[i].y, 0f);
             }
 
-            // Triangulate via a fan (works for convex polygons)
+            // Create a triangle fan: use the first vertex as an anchor and form triangles (0, i, i+1).
             List<int> triangles = new List<int>();
-            for (int i = 1; i < polygon.Count - 1; i++)
+            for (int i = 1; i < sortedVertices.Count - 1; i++)
             {
                 triangles.Add(0);
                 triangles.Add(i);
                 triangles.Add(i + 1);
             }
 
-            mesh.vertices = vertices;
+            // Assign vertices and triangles to the mesh.
+            mesh.vertices = vertices3D;
             mesh.triangles = triangles.ToArray();
             mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
             return mesh;
         }
     }

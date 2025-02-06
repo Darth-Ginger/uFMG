@@ -5,6 +5,7 @@ using UnityEngine;
 using TriangleNet.Geometry;
 using TriangleNet.Meshing;
 using TriangleNet.Voronoi;
+using TriangleNet.Topology.DCEL;
 
 
 namespace FantasyMapGenerator.Utilities
@@ -35,107 +36,121 @@ namespace FantasyMapGenerator.Utilities
             // Add the generated sites to the diagram.
             foreach (var site in generatedSites)
             {
-                // Note: The diagram only stores the positions.
-                // If you want to associate more information, you can extend this.
-                diagram.Sites.Add(site);
+                diagram.AddSite(site);
             }
 
             // Create a Triangle.NET polygon from the generated sites.
             Polygon polygon = new Polygon();
             foreach (Vector2 site in generatedSites)
             {
-                polygon.Add(new Vertex(site.x, site.y));
+                polygon.Add(new TriangleNet.Geometry.Vertex(site.x, site.y));
             }
-
-            // Optionally, you could add constraints or boundary segments here based on bounds.
 
             // Triangulate the polygon using Triangle.NET.
-            // This produces an IMesh.
             IMesh mesh = polygon.Triangulate();
 
-            // Convert the Triangle.NET mesh into your Voronoi diagram structure.
-            // (This example uses a simplified conversion; you might need to extract full Voronoi cells.)
-            UpdateDiagramFromMesh(diagram, mesh);
-        }
+            // Define Triangle.NET bounds (Rectangle: left, bottom, right, top).
+            var triBounds = new TriangleNet.Geometry.Rectangle(bounds.xMin, bounds.yMin, bounds.xMax, bounds.yMax);
 
-        /// <summary>
-        /// Converts a Triangle.NET mesh (IMesh) into the cells, edges, and neighbors for the diagram.
-        /// </summary>
-        private static void UpdateDiagramFromMesh(VoronoiDiagram diagram, IMesh mesh)
-        {
-            // Dictionary to map a Triangle.NET vertex ID to a cell index.
-            Dictionary<int, int> siteIdToCellIndex = new Dictionary<int, int>();
+            // Create the full Voronoi diagram using Triangle.NET’s StandardVoronoi.
+            StandardVoronoi voronoi = new StandardVoronoi((TriangleNet.Mesh)mesh, triBounds);
 
-            // Create cells for each triangle in the mesh.
-            // (In a complete implementation, the conversion from Delaunay triangulation to Voronoi cells is more involved.)
-            foreach (var tri in mesh.Triangles)
+            // Create a lookup from sites to corresponding faces.
+            Dictionary<int, VoronoiCell> siteToCellMap = new();
+
+            List<VoronoiEdge> generatedEdges = new();
+
+            int cellIndex = 0;
+
+            foreach (var face in voronoi.Faces)
             {
-                VoronoiCell cell = new VoronoiCell();
-                // For illustration, compute the triangle's centroid as the cell centroid.
-                Vector2 v0 = GetVertexPosition(tri.GetVertex(0));
-                Vector2 v1 = GetVertexPosition(tri.GetVertex(1));
-                Vector2 v2 = GetVertexPosition(tri.GetVertex(2));
-                cell.Centroid = (v0 + v1 + v2) / 3f;
-                
-                cell.Vertices.Add(v0);
-                cell.Vertices.Add(v1);
-                cell.Vertices.Add(v2);
+                if (face.Generator == null) continue;
 
-                int cellIndex = diagram.Cells.Count;
-                diagram.Cells.Add(cell);
-
-                // Use the first vertex's ID as a placeholder for mapping.
-                int siteId = tri.GetVertex(0).ID;
-                if (!siteIdToCellIndex.ContainsKey(siteId))
-                    siteIdToCellIndex.Add(siteId, cellIndex);
-            }
-
-            // Convert triangle edges to Voronoi edges.
-            foreach (var tri in mesh.Triangles)
-            {
-                for (int i = 0; i < 3; i++)
+                // Create a new cell for the face.
+                Vector2 centroid = new((float)face.Generator.X, (float)face.Generator.Y);
+                VoronoiCell cell = new(centroid, cellIndex)
                 {
-                    VoronoiEdge edge = new VoronoiEdge();
-                    edge.Start = GetVertexPosition(tri.GetVertex(i));
-                    edge.End = GetVertexPosition(tri.GetVertex((i + 1) % 3));
+                    // Add vertices to the cell.
+                    Vertices = new()
+                };
 
-                    // Use our mapping as a placeholder for cell indices.
-                    int id1 = tri.GetVertex(i).ID;
-                    int id2 = tri.GetVertex((i + 1) % 3).ID;
-                    edge.LeftCellIndex = siteIdToCellIndex.ContainsKey(id1) ? siteIdToCellIndex[id1] : -1;
-                    edge.RightCellIndex = siteIdToCellIndex.ContainsKey(id2) ? siteIdToCellIndex[id2] : -1;
+                HalfEdge edge = face.Edge;
+                HalfEdge startEdge = edge;
+                do
+                {
+                    if (edge == null || edge.Origin == null)
+                    {
+                        Debug.LogError("Edge or origin is null.");
+                        break;
+                    }
 
-                    int edgeIndex = diagram.Edges.Count;
-                    diagram.Edges.Add(edge);
+                    // Add the vertex to the cell.
+                    var v = edge.Origin;
+                    if (v != null) 
+                    {
+                        Vector2 vertex = new((float)v.X, (float)v.Y);
+                        vertex.x = Mathf.Clamp(vertex.x, bounds.xMin, bounds.xMax);
+                        vertex.y = Mathf.Clamp(vertex.y, bounds.yMin, bounds.yMax);
+                        cell.AddVertex(vertex);
+                    }
 
-                    // Register this edge with the corresponding cells.
-                    if (edge.LeftCellIndex != -1)
-                        diagram.Cells[edge.LeftCellIndex].EdgeIndices.Add(edgeIndex);
-                    if (edge.RightCellIndex != -1)
-                        diagram.Cells[edge.RightCellIndex].EdgeIndices.Add(edgeIndex);
-                }
+                    // Create Voronoi edge and add it to the cell.
+                    if (edge.Twin != null && edge.Twin.Face != null && face != edge.Twin.Face)
+                    {
+                        VoronoiEdge voronoiEdge = new(
+                            new Vector2((float)edge.Origin.X, (float)edge.Origin.Y),
+                            new Vector2((float)edge.Twin.Origin.X, (float)edge.Twin.Origin.Y),
+                            cellIndex,
+                            edge.Twin.Face.ID
+                        );
+                        generatedEdges.Add(voronoiEdge);
+                    }
+                    
+                    edge = edge.Next;
+                } while (edge != null && edge != startEdge);
+
+                // Add the cell to the diagram.
+                cellIndex++;
+                diagram.AddCell(cell);
+                siteToCellMap[face.ID] = cell;
             }
 
-            // Post-process to compute neighbor relationships.
-            ComputeNeighbors(diagram);
+            diagram.AddEdges(generatedEdges);
+
+            // Compute Neighbors.
+             ComputeNeighbors(diagram, voronoi, siteToCellMap);
         }
 
         /// <summary>
         /// Computes neighbor relationships for cells by inspecting shared edges.
         /// </summary>
-        private static void ComputeNeighbors(VoronoiDiagram diagram)
+        private static void ComputeNeighbors(VoronoiDiagram diagram, StandardVoronoi voronoi, Dictionary<int, VoronoiCell> siteToCellMap)
         {
-            foreach (var edge in diagram.Edges)
+            foreach (var face in voronoi.Faces)
             {
-                if (edge.LeftCellIndex != -1 && edge.RightCellIndex != -1)
+                if (!siteToCellMap.ContainsKey(face.ID)) continue;
+                VoronoiCell cell = siteToCellMap[face.ID];
+
+                HalfEdge edge = face.Edge;
+                HalfEdge startEdge = edge;
+                do
                 {
-                    VoronoiCell left = diagram.Cells[edge.LeftCellIndex];
-                    VoronoiCell right = diagram.Cells[edge.RightCellIndex];
-                    if (!left.Neighbors.Contains(edge.RightCellIndex))
-                        left.Neighbors.Add(edge.RightCellIndex);
-                    if (!right.Neighbors.Contains(edge.LeftCellIndex))
-                        right.Neighbors.Add(edge.LeftCellIndex);
-                }
+                    if (edge == null || edge.Origin == null)
+                    {
+                        Debug.LogError("Edge or origin is null.");
+                        break;
+                    }
+                    
+                    if (edge.Twin != null && siteToCellMap.ContainsKey(edge.Twin.Face.ID))
+                    {
+                        VoronoiCell neighbor = siteToCellMap[edge.Twin.Face.ID];
+                        if (!cell.Neighbors.Contains(neighbor.Index))
+                        {
+                            cell.Neighbors.Add(neighbor.Index);
+                        }
+                    }
+                    edge = edge.Next;
+                } while (edge != null && edge != startEdge);
             }
         }
 
