@@ -140,6 +140,7 @@ namespace FantasyMapGenerator.Utilities.Debugging
         // For each cell, create or update a child object.
         for (int i = 0; i < diagram.Cells.Count; i++) {
             VoronoiCell cell = diagram.Cells[i];
+            
             // Only proceed if the cell has a valid polygon.
             if (cell.Vertices == null || cell.Vertices.Count < 3)
             {
@@ -165,6 +166,9 @@ namespace FantasyMapGenerator.Utilities.Debugging
             MeshRenderer mr = cellGO.GetComponent<MeshRenderer>();
             if (mr == null)
                 mr = cellGO.AddComponent<MeshRenderer>();
+            CellData cd = cellGO.AddComponent<CellData>();
+            cd.SetCellData(cell);
+
 
             // Create (or update) the mesh for the cell polygon.
             Mesh cellMesh = VoronoiUtilities.CreateCellMesh(cell);
@@ -177,5 +181,6 @@ namespace FantasyMapGenerator.Utilities.Debugging
             mr.material = cellMat;
         }
     }
+
     }
 }

@@ -136,6 +136,30 @@ namespace FantasyMapGenerator.Utilities
 
     }
 
+    public class CellData : MonoBehaviour 
+    { 
+        [SerializeField] private int _index;
+        [SerializeField] private Vector2 _centroid;
+        [SerializeField] private List<int> _edgeIndices;
+        [SerializeField] private List<int> _neighbors;
+        [SerializeField] private List<Vector2> _vertices;
+
+        public int Index              { get => _index;  }
+        public Vector2 Centroid       { get => _centroid; }
+        public List<int> EdgeIndices  { get => _edgeIndices; } 
+        public List<int> Neighbors    { get => _neighbors; } 
+        public List<Vector2> Vertices { get => _vertices; }
+
+        public void SetCellData(VoronoiCell cell)
+        {
+            _index = cell.Index;
+            _centroid = cell.Centroid;
+            _edgeIndices = cell.EdgeIndices;
+            _neighbors = cell.Neighbors;
+            _vertices = cell.Vertices;
+        }
+    }
+
     [System.Serializable]
     public class VoronoiEdge
     {

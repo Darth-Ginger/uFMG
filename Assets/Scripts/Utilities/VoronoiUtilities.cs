@@ -136,5 +136,81 @@ namespace FantasyMapGenerator.Utilities
 
             return mesh;
         }
+
+
+        /// <summary>
+        /// Clips a polygon to the given rectangular bounds using the Sutherland–Hodgman algorithm.
+        /// </summary>
+        public static List<Vector2> ClipPolygonToRect(List<Vector2> polygon, Rect clipRect)
+        {
+            List<Vector2> outputList = new List<Vector2>(polygon);
+
+            // Define the clipping edges: left, top, right, bottom.
+            // Each edge is represented by a function that returns true if a point is inside.
+            System.Func<Vector2, bool>[] inside =
+            {
+                    (p) => p.x >= clipRect.xMin, // left
+                    (p) => p.y <= clipRect.yMax, // top (assuming y increases upward)
+                    (p) => p.x <= clipRect.xMax, // right
+                    (p) => p.y >= clipRect.yMin  // bottom
+                };
+
+            // For each edge, we need to clip the polygon.
+            // Also, define a function that computes the intersection of a polygon edge with a clip edge.
+            System.Func<Vector2, Vector2, int, Vector2> intersect = (p1, p2, edgeIndex) =>
+            {
+                float x = 0, y = 0;
+                switch (edgeIndex)
+                {
+                    case 0: // left: x = clipRect.xMin
+                        x = clipRect.xMin;
+                        y = p1.y + (p2.y - p1.y) * (clipRect.xMin - p1.x) / (p2.x - p1.x);
+                        break;
+                    case 1: // top: y = clipRect.yMax
+                        y = clipRect.yMax;
+                        x = p1.x + (p2.x - p1.x) * (clipRect.yMax - p1.y) / (p2.y - p1.y);
+                        break;
+                    case 2: // right: x = clipRect.xMax
+                        x = clipRect.xMax;
+                        y = p1.y + (p2.y - p1.y) * (clipRect.xMax - p1.x) / (p2.x - p1.x);
+                        break;
+                    case 3: // bottom: y = clipRect.yMin
+                        y = clipRect.yMin;
+                        x = p1.x + (p2.x - p1.x) * (clipRect.yMin - p1.y) / (p2.y - p1.y);
+                        break;
+                }
+                return new Vector2(x, y);
+            };
+
+            // Clip against each of the 4 boundaries.
+            for (int edge = 0; edge < 4; edge++)
+            {
+                List<Vector2> inputList = new List<Vector2>(outputList);
+                outputList.Clear();
+                if (inputList.Count == 0)
+                    break;
+
+                Vector2 S = inputList[inputList.Count - 1];
+                foreach (Vector2 E in inputList)
+                {
+                    if (inside[edge](E))
+                    {
+                        if (!inside[edge](S))
+                        {
+                            outputList.Add(intersect(S, E, edge));
+                        }
+                        outputList.Add(E);
+                    }
+                    else if (inside[edge](S))
+                    {
+                        outputList.Add(intersect(S, E, edge));
+                    }
+                    S = E;
+                }
+            }
+
+            return outputList;
+        }
     }
+
 }
